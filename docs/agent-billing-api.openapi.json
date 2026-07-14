@@ -1,0 +1,453 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Ranhill SAJ - Get User Water Billing API",
+    "description": "Agent API for retrieving complete water billing history, totals, and current bill status for a customer by userId. No authentication required.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Ranhill SAJ API Support",
+      "email": "api-support@atenxion.ai"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api-ranhill.atenxion.ai",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/api/v1/billing/get-by-user": {
+      "post": {
+        "summary": "Get Water Billing by User",
+        "description": "Returns complete billing history, summary totals, current bill breakdown, and customer details for the provided userId.",
+        "tags": ["Billing"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetBillingByUserRequest"
+              },
+              "example": {
+                "userId": "507f1f77bcf86cd799439011"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User billing fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingByUserResponse"
+                },
+                "example": {
+                  "summary": {
+                    "meterNumber": "MTR-20001",
+                    "totalUsage": 119,
+                    "totalBilled": 92.2,
+                    "totalPaid": 77.2,
+                    "currentBalance": 15,
+                    "recordCount": 6,
+                    "from": "2026-02-01T00:00:00.000Z",
+                    "to": "2026-07-01T00:00:00.000Z"
+                  },
+                  "records": [
+                    {
+                      "_id": "66a100000000000000000001",
+                      "billingPeriod": "2026-07-01T00:00:00.000Z",
+                      "periodStart": "2026-07-01T00:00:00.000Z",
+                      "periodEnd": "2026-07-31T23:59:59.999Z",
+                      "meterReadingStart": 1259,
+                      "meterReadingEnd": 1277,
+                      "usageM3": 18,
+                      "monthlyFee": 12,
+                      "usageCharge": 3,
+                      "totalAmount": 15,
+                      "paidAmount": 0,
+                      "status": "current",
+                      "dueDate": "2026-07-31T23:59:59.999Z",
+                      "paidDate": null,
+                      "plan": {
+                        "_id": "66a000000000000000000001",
+                        "name": "Residential Basic",
+                        "description": "Standard residential water plan for households in Johor.",
+                        "monthlyFee": 12,
+                        "pricePerM3": 1.5,
+                        "includedUsage": 10,
+                        "lateFee": 5,
+                        "status": "active"
+                      },
+                      "createdAt": "2026-07-01T00:00:00.000Z",
+                      "updatedAt": "2026-07-01T00:00:00.000Z"
+                    },
+                    {
+                      "_id": "66a100000000000000000002",
+                      "billingPeriod": "2026-06-01T00:00:00.000Z",
+                      "periodStart": "2026-06-01T00:00:00.000Z",
+                      "periodEnd": "2026-06-30T23:59:59.999Z",
+                      "meterReadingStart": 1239,
+                      "meterReadingEnd": 1259,
+                      "usageM3": 20,
+                      "monthlyFee": 12,
+                      "usageCharge": 3,
+                      "totalAmount": 15,
+                      "paidAmount": 15,
+                      "status": "paid",
+                      "dueDate": "2026-06-30T23:59:59.999Z",
+                      "paidDate": "2026-06-28T10:30:00.000Z",
+                      "plan": {
+                        "_id": "66a000000000000000000001",
+                        "name": "Residential Basic",
+                        "monthlyFee": 12,
+                        "pricePerM3": 1.5,
+                        "includedUsage": 10,
+                        "lateFee": 5,
+                        "status": "active"
+                      },
+                      "createdAt": "2026-06-01T00:00:00.000Z",
+                      "updatedAt": "2026-06-28T10:30:00.000Z"
+                    }
+                  ],
+                  "currentBill": {
+                    "monthlyFee": 12,
+                    "usageCharge": 3,
+                    "usage": 18,
+                    "excess": 8,
+                    "total": 15,
+                    "plan": {
+                      "_id": "66a000000000000000000001",
+                      "name": "Residential Basic",
+                      "monthlyFee": 12,
+                      "pricePerM3": 1.5,
+                      "includedUsage": 10,
+                      "lateFee": 5,
+                      "status": "active"
+                    }
+                  },
+                  "customer": {
+                    "_id": "507f1f77bcf86cd799439011",
+                    "fullName": "Ahmad bin Hassan",
+                    "email": "ahmad.hassan@ranhill.com",
+                    "phone": "+60 12-345 6789",
+                    "address": "No. 18, Jalan Mawar 3, Taman Johor Jaya, 81100 Johor Bahru, Johor",
+                    "meterNumber": "MTR-20001",
+                    "waterStatus": "on",
+                    "status": "approved",
+                    "waterPlan": {
+                      "_id": "66a000000000000000000001",
+                      "name": "Residential Basic",
+                      "monthlyFee": 12,
+                      "pricePerM3": 1.5,
+                      "includedUsage": 10,
+                      "lateFee": 5,
+                      "status": "active"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "A valid userId is required."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Customer not found."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "GetBillingByUserRequest": {
+        "type": "object",
+        "required": ["userId"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "MongoDB ID of the customer whose billing to retrieve",
+            "example": "507f1f77bcf86cd799439011"
+          }
+        }
+      },
+      "BillingByUserResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/BillingSummary"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillingRecordFull"
+            }
+          },
+          "currentBill": {
+            "$ref": "#/components/schemas/CurrentBillBreakdown"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/CustomerSummary"
+          }
+        }
+      },
+      "BillingSummary": {
+        "type": "object",
+        "properties": {
+          "meterNumber": {
+            "type": "string",
+            "example": "MTR-20001"
+          },
+          "totalUsage": {
+            "type": "number",
+            "description": "Total water usage in cubic metres (m³) across all records",
+            "example": 119
+          },
+          "totalBilled": {
+            "type": "number",
+            "description": "Total amount billed in RM",
+            "example": 92.2
+          },
+          "totalPaid": {
+            "type": "number",
+            "description": "Total amount paid in RM",
+            "example": 77.2
+          },
+          "currentBalance": {
+            "type": "number",
+            "description": "Outstanding balance due in RM",
+            "example": 15
+          },
+          "recordCount": {
+            "type": "integer",
+            "example": 6
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Earliest billing period in the result set"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Latest billing period in the result set"
+          }
+        }
+      },
+      "BillingRecordFull": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "billingPeriod": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "meterReadingStart": {
+            "type": "number",
+            "description": "Meter reading at period start (m³)"
+          },
+          "meterReadingEnd": {
+            "type": "number",
+            "description": "Meter reading at period end (m³)"
+          },
+          "usageM3": {
+            "type": "number",
+            "description": "Water usage for the period (m³)"
+          },
+          "monthlyFee": {
+            "type": "number",
+            "description": "Base monthly fee in RM"
+          },
+          "usageCharge": {
+            "type": "number",
+            "description": "Usage charge in RM"
+          },
+          "totalAmount": {
+            "type": "number",
+            "description": "Total billed amount in RM"
+          },
+          "paidAmount": {
+            "type": "number",
+            "description": "Amount paid in RM"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["paid", "unpaid", "current"],
+            "description": "Bill status: paid, unpaid, or current billing period"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paidDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "plan": {
+            "$ref": "#/components/schemas/WaterPlanSummary"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CurrentBillBreakdown": {
+        "type": "object",
+        "properties": {
+          "monthlyFee": {
+            "type": "number"
+          },
+          "usageCharge": {
+            "type": "number"
+          },
+          "usage": {
+            "type": "number",
+            "description": "Current month usage in m³"
+          },
+          "excess": {
+            "type": "number",
+            "description": "Usage above plan included allowance in m³"
+          },
+          "total": {
+            "type": "number",
+            "description": "Current bill total in RM"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/WaterPlanSummary"
+          }
+        }
+      },
+      "CustomerSummary": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "meterNumber": {
+            "type": "string"
+          },
+          "waterStatus": {
+            "type": "string",
+            "enum": ["on", "off"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "approved", "disabled"]
+          },
+          "waterPlan": {
+            "$ref": "#/components/schemas/WaterPlanSummary"
+          }
+        }
+      },
+      "WaterPlanSummary": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "monthlyFee": {
+            "type": "number"
+          },
+          "pricePerM3": {
+            "type": "number"
+          },
+          "includedUsage": {
+            "type": "number"
+          },
+          "lateFee": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive"]
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Billing",
+      "description": "Agent endpoints for customer water billing data"
+    }
+  ]
+}
