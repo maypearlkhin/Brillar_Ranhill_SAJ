@@ -1,5 +1,7 @@
 /**
  * PM2 — from repo root: bash scripts/pm2-start.sh
+ *
+ * Reads frontend/.env.production into process env (no shell export).
  */
 const path = require("path");
 const fs = require("fs");
@@ -29,6 +31,10 @@ const feEnv = {
   ...loadEnvFile(path.join(__dirname, "frontend", ".env.production")),
   ...loadEnvFile(path.join(__dirname, "frontend", ".env.local")),
 };
+
+if (!feEnv.NEXT_PUBLIC_API_URL) {
+  feEnv.NEXT_PUBLIC_API_URL = "https://api-ranhill.atenxion.ai/api";
+}
 
 module.exports = {
   apps: [

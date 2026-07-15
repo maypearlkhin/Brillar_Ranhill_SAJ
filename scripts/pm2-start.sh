@@ -13,8 +13,16 @@ echo "==> Frontend"
 cd "$ROOT/frontend"
 if [ ! -f .env.production ]; then
   cp .env.production.example .env.production
-  echo "    Created frontend/.env.production — edit NEXT_PUBLIC_API_URL if needed"
+  echo "    Created frontend/.env.production"
 fi
+# Guard against localhost API URL on production
+if grep -q "localhost" .env.production 2>/dev/null; then
+  echo "    WARNING: .env.production still uses localhost — rewriting to api-ranhill"
+  cat > .env.production <<'EOF'
+NEXT_PUBLIC_API_URL=https://api-ranhill.atenxion.ai/api
+EOF
+fi
+echo "    NEXT_PUBLIC_API_URL=$(grep NEXT_PUBLIC_API_URL .env.production | cut -d= -f2-)"
 npm ci
 npm run build
 

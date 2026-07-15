@@ -2,7 +2,8 @@
 
 ```bash
 cp backend/.env.example backend/.env
-cp frontend/.env.production.example frontend/.env.production   # edit API URL
+cp frontend/.env.production.example frontend/.env.production
+# ensure: NEXT_PUBLIC_API_URL=https://api-ranhill.atenxion.ai/api
 
 bash scripts/pm2-start.sh
 ```
@@ -14,29 +15,27 @@ bash scripts/pm2-start.sh
 | ranhill-saj-backend | 4013 | `node src/server.js` |
 | ranhill-saj-frontend | 3017 | `npm start` in `frontend/` |
 
-Build runs **on the server** (do not copy `.next` from Windows).
+Build on the server (do not copy `.next` from Windows).
+
+## Frontend API URL
+
+File: `frontend/.env.production`
+
+```env
+NEXT_PUBLIC_API_URL=https://api-ranhill.atenxion.ai/api
+```
+
+Then rebuild + restart:
+
+```bash
+cd frontend && npm run build && cd ..
+pm2 restart ecosystem.config.js --update-env
+```
+
+If the browser still calls `localhost`, the env file was wrong at build/runtime — fix `.env.production` and rebuild.
 
 ## Webhook logs
 
 ```bash
 pm2 logs ranhill-saj-backend
 ```
-
-On customer login/logout you will see:
-```
-[Auth] Login OK: ahmad.hassan@ranhill.com role=customer
-[Auth] Triggering Atenxion login webhook...
-[Atenxion] Login webhook called userId=...
-[Atenxion] POST https://backend.atenxion.ai/api/post-login/user-login
-[Atenxion] Response: HTTP 200
-[Atenxion] OK /post-login/user-login userId=...
-```
-
-## Frontend env
-
-`frontend/.env.production`:
-```env
-NEXT_PUBLIC_API_URL=https://api-ranhill.atenxion.ai/api
-```
-
-No `export` needed — PM2 reads this file via `ecosystem.config.js`.
