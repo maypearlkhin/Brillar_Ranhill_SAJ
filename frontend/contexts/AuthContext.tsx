@@ -11,7 +11,6 @@ import {
 } from "react";
 import type { User } from "@/types/auth";
 import { getProfileRequest, loginRequest } from "@/services/authService";
-import { getPublicIntegrationConfig } from "@/services/integrationService";
 import { sendLoginEvent, sendLogoutEvent } from "@/utils/atenxion-webhook";
 import {
   clearAuthStorage,
@@ -41,22 +40,20 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     const currentUser = user ?? getStoredUser<User>();
+    const userId = currentUser?._id;
 
-    if (currentUser?.role === "customer" && currentUser._id) {
-      try {
-        const integration = await getPublicIntegrationConfig();
-        if (integration?.token) {
-          await sendLogoutEvent(currentUser._id, integration);
-        }
-      } catch {
-        // Continue logout even if webhook fails.
+    try {
+      if (userId) {
+        await sendLogoutEvent(userId);
       }
+    } catch {
+      // Webhook failure must not block logout.
+    } finally {
+      clearAuthStorage();
+      setUser(null);
+      setToken(null);
+      window.location.replace("/login");
     }
-
-    clearAuthStorage();
-    setUser(null);
-    setToken(null);
-    window.location.href = "/login";
   }, [user]);
 
   const refreshProfile = useCallback(async () => {
@@ -100,7 +97,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
     const interval = setInterval(() => {
       if (isTokenExpired(token)) {
-        logout();
+        void logout();
       }
     }, 30000);
 
@@ -110,26 +107,20 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const result = await loginRequest(email, password);
 
-    // Fire webhook before updating auth state — login page useEffect would
-    // redirect immediately and abort an in-flight request after setUser().
-    if (result.user.role === "customer") {
-      try {
-        const integration = await getPublicIntegrationConfig();
-        if (integration?.token) {
-          await sendLoginEvent(result.user._id, integration);
-        }
-      } catch {
-        // Continue login even if webhook fails.
+    try {
+      if (result.user._id) {
+        await sendLoginEvent(result.user._id);
       }
+    } catch {
+      // Webhook failure must not block login.
     }
 
     setStoredToken(result.token);
     setStoredUser(result.user);
-    setToken(result.token);
-    setUser(result.user);
 
-    window.location.href =
-      result.user.role === "admin" ? "/admin/dashboard" : "/customer/dashboard";
+    window.location.replace(
+      result.user.role === "admin" ? "/admin/dashboard" : "/customer/dashboard",
+    );
   }, []);
 
   const value = useMemo(
@@ -142,7 +133,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       refreshProfile,
     }),
-    [user, token, isLoading, login, logout, refreshProfile]
+    [user, token, isLoading, login, logout, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

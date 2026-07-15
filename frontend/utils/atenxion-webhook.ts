@@ -1,48 +1,53 @@
-import {
-  DEFAULT_ATENXION_BACKEND_URL,
-  type PublicIntegrationConfig,
-} from "@/services/integrationService";
+import { getApiBaseUrl } from "@/lib/api-config";
 
-function normalizeBaseUrl(url?: string): string {
-  return (url?.trim() || DEFAULT_ATENXION_BACKEND_URL).replace(/\/$/, "");
+export const DEFAULT_ATENXION_BACKEND_URL = "https://backend.atenxion.ai/api";
+
+export interface WebhookConfig {
+  atenxionBackendUrl: string;
+  token: string;
 }
 
-async function postAtenxionEvent(
-  path: string,
-  userId: string,
-  config: Pick<PublicIntegrationConfig, "atenxionBackendUrl" | "token">,
-) {
-  const endpoint = `${normalizeBaseUrl(config.atenxionBackendUrl)}${path}`;
+async function loadWebhookConfig(): Promise<WebhookConfig> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/integration/public`, {
+      method: "GET",
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      return { atenxionBackendUrl: DEFAULT_ATENXION_BACKEND_URL, token: "" };
+    }
+    const data = (await res.json()) as {
+      integration?: { atenxionBackendUrl?: string; token?: string } | null;
+    };
+    return {
+      atenxionBackendUrl: data.integration?.atenxionBackendUrl?.trim() || DEFAULT_ATENXION_BACKEND_URL,
+      token: data.integration?.token?.trim() || "",
+    };
+  } catch {
+    return { atenxionBackendUrl: DEFAULT_ATENXION_BACKEND_URL, token: "" };
+  }
+}
 
-  await fetch(endpoint, {
+async function postEvent(path: string, userId: string, config: WebhookConfig) {
+  const base = config.atenxionBackendUrl.replace(/\/$/, "");
+  await fetch(`${base}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      authorization: config.token || "",
+      authorization: config.token,
     },
     body: JSON.stringify({ userId }),
-    keepalive: true,
+    signal: AbortSignal.timeout(8000),
   });
 }
 
-export async function sendLoginEvent(
-  userId: string,
-  config: Pick<PublicIntegrationConfig, "atenxionBackendUrl" | "token">,
-) {
-  try {
-    await postAtenxionEvent("/post-login/user-login", userId, config);
-  } catch {
-    // Non-blocking: login should still succeed if webhook fails.
-  }
+export async function sendLoginEvent(userId: string) {
+  const config = await loadWebhookConfig();
+  await postEvent("/post-login/user-login", userId, config);
 }
 
-export async function sendLogoutEvent(
-  userId: string,
-  config: Pick<PublicIntegrationConfig, "atenxionBackendUrl" | "token">,
-) {
-  try {
-    await postAtenxionEvent("/post-login/user-logout", userId, config);
-  } catch {
-    // Non-blocking: logout should still proceed if webhook fails.
-  }
+export async function sendLogoutEvent(userId: string) {
+  const config = await loadWebhookConfig();
+  await postEvent("/post-login/user-logout", userId, config);
 }

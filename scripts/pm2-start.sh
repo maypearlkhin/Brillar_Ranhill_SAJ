@@ -14,13 +14,13 @@ if [ ! -d node_modules ]; then
 fi
 
 echo "==> Frontend: build standalone bundle (Linux)"
-if [ ! -f "$ROOT/frontend/.next/standalone/server.js" ]; then
-  cd "$ROOT/frontend"
-  npm ci
-  npm run build
-else
-  echo "    standalone already exists — skip build (delete frontend/.next to rebuild)"
+cd "$ROOT/frontend"
+if [ ! -f .env.production ]; then
+  echo "    Creating frontend/.env.production from example — edit NEXT_PUBLIC_API_URL if needed"
+  cp .env.production.example .env.production
 fi
+npm ci
+npm run build
 
 cd "$ROOT"
 

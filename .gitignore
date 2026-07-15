@@ -41,10 +41,12 @@ backend/.env
 backend/.env.local
 frontend/.env
 frontend/.env.local
+frontend/.env.production
 
 # keep examples tracked
 !.env.example
 !**/.env.example
+!**/.env.production.example
 
 # vercel
 .vercel

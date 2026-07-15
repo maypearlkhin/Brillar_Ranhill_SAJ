@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children, role }: ProtectedRouteProps) 
     if (isLoading) return;
 
     if (!isAuthenticated) {
-      router.replace("/login");
+      window.location.replace("/login");
       return;
     }
 
