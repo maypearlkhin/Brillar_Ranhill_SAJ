@@ -1,8 +1,5 @@
 /**
- * PM2 — run from repo root: bash scripts/pm2-start.sh
- *
- * Frontend reads frontend/.env.production (copied into standalone on build).
- * No need to export NEXT_PUBLIC_API_URL in the shell.
+ * PM2 — from repo root: bash scripts/pm2-start.sh
  */
 const path = require("path");
 const fs = require("fs");
@@ -40,12 +37,7 @@ module.exports = {
       cwd: "./backend",
       script: "src/server.js",
       interpreter: "node",
-      instances: 1,
       autorestart: true,
-      watch: false,
-      max_memory_restart: "512M",
-      error_file: "../logs/backend-error.log",
-      out_file: "../logs/backend-out.log",
       env: {
         PORT: 4013,
         NODE_ENV: "production",
@@ -53,16 +45,10 @@ module.exports = {
     },
     {
       name: "ranhill-saj-frontend",
-      cwd: "./frontend/.next/standalone",
-      script: "server.js",
-      interpreter: "node",
-      interpreter_args: "--env-file .env.production",
-      instances: 1,
+      cwd: "./frontend",
+      script: "npm",
+      args: "start",
       autorestart: true,
-      watch: false,
-      max_memory_restart: "512M",
-      error_file: "../../../logs/frontend-error.log",
-      out_file: "../../../logs/frontend-out.log",
       env: {
         PORT: 3017,
         HOSTNAME: "0.0.0.0",

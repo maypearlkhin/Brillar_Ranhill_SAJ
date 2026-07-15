@@ -1,52 +1,42 @@
-# Deploying Ranhill SAJ (EC2 / Linux + PM2)
-
-## PM2 start
+# Deploy (EC2 + PM2)
 
 ```bash
-cp backend/.env.example backend/.env          # edit once
-cp frontend/.env.production.example frontend/.env.production   # set API URL
+cp backend/.env.example backend/.env
+cp frontend/.env.production.example frontend/.env.production   # edit API URL
 
-chmod +x scripts/pm2-start.sh
 bash scripts/pm2-start.sh
 ```
 
-No `export` needed — PM2 reads `frontend/.env.production` automatically.
+## PM2 apps
 
-## Frontend env file
+| Name | Port | Command |
+|------|------|---------|
+| ranhill-saj-backend | 4013 | `node src/server.js` |
+| ranhill-saj-frontend | 3017 | `npm start` in `frontend/` |
 
-| File | When |
-|------|------|
-| `frontend/.env.local` | Local `npm run dev` |
-| `frontend/.env.production` | PM2 / production build |
+Build runs **on the server** (do not copy `.next` from Windows).
 
-Example `frontend/.env.production`:
+## Webhook logs
+
+```bash
+pm2 logs ranhill-saj-backend
+```
+
+On customer login/logout you will see:
+```
+[Auth] Login OK: ahmad.hassan@ranhill.com role=customer
+[Auth] Triggering Atenxion login webhook...
+[Atenxion] Login webhook called userId=...
+[Atenxion] POST https://backend.atenxion.ai/api/post-login/user-login
+[Atenxion] Response: HTTP 200
+[Atenxion] OK /post-login/user-login userId=...
+```
+
+## Frontend env
+
+`frontend/.env.production`:
 ```env
 NEXT_PUBLIC_API_URL=https://api-ranhill.atenxion.ai/api
 ```
 
-This file is copied into `frontend/.next/standalone/` during `npm run build`.
-
-## Login / logout webhooks
-
-On success:
-1. `POST {atenxionBackendUrl}/post-login/user-login` with `{ userId }`
-2. Redirect
-
-On logout:
-1. `POST {atenxionBackendUrl}/post-login/user-logout` with `{ userId }`
-2. Clear session → redirect `/login`
-
-Config (script, token, Atenxion URL) comes from **Admin → Integration** in the DB.
-
-## PM2 commands
-
-```bash
-pm2 list
-pm2 logs
-pm2 restart ecosystem.config.js
-pm2 save
-```
-
-## Do not copy Windows `.next` to Linux
-
-Build on the server with `bash scripts/pm2-start.sh`.
+No `export` needed — PM2 reads this file via `ecosystem.config.js`.

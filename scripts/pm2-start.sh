@@ -1,40 +1,29 @@
 #!/usr/bin/env bash
-# Build (if needed) and start both apps with PM2. Run from repo root on Linux EC2.
+# Build + PM2 start. Run on Linux EC2 from repo root.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-mkdir -p logs
-
-echo "==> Backend: install dependencies"
+echo "==> Backend"
 cd "$ROOT/backend"
-if [ ! -d node_modules ]; then
-  npm ci
-fi
+npm ci
 
-echo "==> Frontend: build standalone bundle (Linux)"
+echo "==> Frontend"
 cd "$ROOT/frontend"
 if [ ! -f .env.production ]; then
-  echo "    Creating frontend/.env.production from example — edit NEXT_PUBLIC_API_URL if needed"
   cp .env.production.example .env.production
+  echo "    Created frontend/.env.production — edit NEXT_PUBLIC_API_URL if needed"
 fi
 npm ci
 npm run build
 
+echo "==> PM2"
 cd "$ROOT"
-
-echo "==> PM2: start / reload"
-if pm2 describe ranhill-saj-backend >/dev/null 2>&1; then
-  pm2 reload ecosystem.config.js --update-env
-else
-  pm2 start ecosystem.config.js
-fi
-
+pm2 delete ranhill-saj-backend ranhill-saj-frontend 2>/dev/null || true
+pm2 start ecosystem.config.js
 pm2 save
-echo ""
-echo "==> Running:"
+
 pm2 list
 echo ""
-echo "Logs:  pm2 logs"
-echo "Stop:  pm2 stop ecosystem.config.js"
+echo "Logs: pm2 logs ranhill-saj-backend"

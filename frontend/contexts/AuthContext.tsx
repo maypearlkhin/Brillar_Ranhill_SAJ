@@ -10,8 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import type { User } from "@/types/auth";
-import { getProfileRequest, loginRequest } from "@/services/authService";
-import { sendLoginEvent, sendLogoutEvent } from "@/utils/atenxion-webhook";
+import { getProfileRequest, loginRequest, logoutRequest } from "@/services/authService";
 import {
   clearAuthStorage,
   getStoredToken,
@@ -39,22 +38,17 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const logout = useCallback(async () => {
-    const currentUser = user ?? getStoredUser<User>();
-    const userId = currentUser?._id;
-
     try {
-      if (userId) {
-        await sendLogoutEvent(userId);
-      }
+      await logoutRequest();
     } catch {
-      // Webhook failure must not block logout.
+      // Continue logout even if API call fails.
     } finally {
       clearAuthStorage();
       setUser(null);
       setToken(null);
       window.location.replace("/login");
     }
-  }, [user]);
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     const profile = await getProfileRequest();
@@ -106,18 +100,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await loginRequest(email, password);
-
-    try {
-      if (result.user._id) {
-        await sendLoginEvent(result.user._id);
-      }
-    } catch {
-      // Webhook failure must not block login.
-    }
-
     setStoredToken(result.token);
     setStoredUser(result.user);
-
     window.location.replace(
       result.user.role === "admin" ? "/admin/dashboard" : "/customer/dashboard",
     );
