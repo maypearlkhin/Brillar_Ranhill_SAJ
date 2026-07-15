@@ -1,13 +1,11 @@
 /**
- * PM2 ecosystem — production processes.
+ * PM2 ecosystem — run from repo root:
+ *   bash scripts/pm2-start.sh
  *
- * Setup:
- *   cd frontend && npm ci && npm run build
- *   cd backend  && npm ci
- *   pm2 start ecosystem.config.js
- *
- * Frontend serves the pre-built output from frontend/.next via `next start`.
+ * Build frontend ON Linux first (never copy .next from Windows).
  */
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4013/api";
+
 module.exports = {
   apps: [
     {
@@ -15,6 +13,12 @@ module.exports = {
       cwd: "./backend",
       script: "src/server.js",
       interpreter: "node",
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "512M",
+      error_file: "../logs/backend-error.log",
+      out_file: "../logs/backend-out.log",
       env: {
         PORT: 4013,
         NODE_ENV: "production",
@@ -22,13 +26,20 @@ module.exports = {
     },
     {
       name: "ranhill-saj-frontend",
-      cwd: "./frontend",
+      cwd: "./frontend/.next/standalone",
+      script: "server.js",
       interpreter: "node",
-      script: "node_modules/next/dist/bin/next",
-      args: "start",
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "512M",
+      error_file: "../../../logs/frontend-error.log",
+      out_file: "../../../logs/frontend-out.log",
       env: {
         PORT: 3017,
+        HOSTNAME: "0.0.0.0",
         NODE_ENV: "production",
+        NEXT_PUBLIC_API_URL: apiUrl,
       },
     },
   ],
