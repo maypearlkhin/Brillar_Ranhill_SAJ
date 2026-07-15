@@ -1,22 +1,16 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Alert, Box, Button, Stack, TextField } from "@mui/material";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthShell, BackToHomeLink } from "@/components/ui/DashboardUI";
 
 export default function LoginPage() {
-  const { login, isAuthenticated, user, isLoading } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
-      window.location.href = user.role === "admin" ? "/admin/dashboard" : "/customer/dashboard";
-    }
-  }, [isAuthenticated, isLoading, user]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();

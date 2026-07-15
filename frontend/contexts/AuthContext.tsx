@@ -109,11 +109,9 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await loginRequest(email, password);
-    setStoredToken(result.token);
-    setStoredUser(result.user);
-    setToken(result.token);
-    setUser(result.user);
 
+    // Fire webhook before updating auth state — login page useEffect would
+    // redirect immediately and abort an in-flight request after setUser().
     if (result.user.role === "customer") {
       try {
         const integration = await getPublicIntegrationConfig();
@@ -124,6 +122,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         // Continue login even if webhook fails.
       }
     }
+
+    setStoredToken(result.token);
+    setStoredUser(result.user);
+    setToken(result.token);
+    setUser(result.user);
 
     window.location.href =
       result.user.role === "admin" ? "/admin/dashboard" : "/customer/dashboard";

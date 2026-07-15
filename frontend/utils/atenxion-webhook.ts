@@ -21,6 +21,7 @@ async function postAtenxionEvent(
       authorization: config.token || "",
     },
     body: JSON.stringify({ userId }),
+    keepalive: true,
   });
 }
 
